@@ -19,9 +19,52 @@ public class SistemaVendas implements IVenda { // Implementação da interface I
         eventos.add(e); // Adiciona à coleção
     }
 
+    // Método para comprar ingresso
+    public void comprarIngresso(int clienteId, int eventoId) {
+        Cliente cliente = buscarCliente(clienteId);
+        Evento evento = buscarEvento(eventoId);
+        if (cliente != null && evento != null && evento.getIngressosDisponiveis() > 0) {
+            String codigo = "ING" + (ingressos.size() + 1);
+            ingressos.add(new Ingresso(evento, cliente, codigo)); // Composição em ação
+            evento.reduzirIngressos(1);
+            totalVendas++; // Atualiza atributo estático
+        }
+    }
+
+    // Método para auditar ingressos disponíveis
+    public int auditarIngressosDisponiveis(int eventoId) {
+        Evento evento = buscarEvento(eventoId);
+        return (evento != null) ? evento.getIngressosDisponiveis() : 0;
+    }
+
     @Override // Sobrescrita: implementação do método da interface
     public double calcularReceita() {
-        return 0; // Implementação temporária
+        double total = 0;
+        for (Ingresso i : ingressos) { // Polimorfismo: itera sobre coleção de ingressos
+            total += i.getEvento().getValorIngresso();
+        }
+        return total;
+    }
+
+    // Sobrecarga: versão do método com parâmetro específico
+    public double calcularReceita(int eventoId) {
+        double total = 0;
+        for (Ingresso i : ingressos) { // Polimorfismo: itera sobre coleção de ingressos
+            if (i.getEvento().getId() == eventoId) {
+                total += i.getEvento().getValorIngresso();
+            }
+        }
+        return total;
+    }
+
+    // Método auxiliar para buscar cliente
+    private Cliente buscarCliente(int id) {
+        return clientes.stream().filter(c -> c.getId() == id).findFirst().orElse(null);
+    }
+
+    // Método auxiliar para buscar evento
+    private Evento buscarEvento(int id) {
+        return eventos.stream().filter(e -> e.getId() == id).findFirst().orElse(null);
     }
 
     // Método estático para acessar o total de vendas
